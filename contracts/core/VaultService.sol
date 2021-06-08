@@ -18,6 +18,9 @@ import "../lib/console.sol";
  * @dev Do not use in mainnet.
  */
 contract VaultService is PriceModel, Ownable {
+    //!!!!!!!! Check befor deploy !!!!!!!!
+    // Not more then 100 units  of underline token(see decimals) 
+    uint256 constant MAX_DEPOSIT = 100e18;
     using SafeMath for uint256;
 
 
@@ -62,6 +65,7 @@ contract VaultService is PriceModel, Ownable {
 
     // Add liquidity to vault
     function addLiquidity(uint256 amount) external {
+        require(amount < MAX_DEPOSIT, "NOT MORE in TESTS");
         ERC20(_underlyingTokenAddress).transferFrom(
             msg.sender,
             address(this),
