@@ -21,6 +21,10 @@ import "../lib/console.sol";
  * @dev Leverage trading on UniSwap.
  */
 contract PoolService is Ownable {
+    //!!!!!!!! Check befor deploy !!!!!!!!
+    // Not more then 100 units  of underline token(see decimals) 
+    uint256 constant MAX_DEPOSIT = 100e18;
+
     using SafeMath for uint256;
     uint256 constant X_LEVERAGE = 4;
     uint256 constant S_1 = 1e18;
@@ -113,6 +117,7 @@ contract PoolService is Ownable {
 
     // open Leverage for client
     function openPosition(uint256 amount) external {
+        require(amount < MAX_DEPOSIT, "NOT MORE in TESTS");
         // move tokens to vault
         uint256 leveragedAmount = amount.mul(X_LEVERAGE);
         uint256 ci = _vaultService.calcLinearCumulative_S1();
