@@ -45,7 +45,7 @@ contract PositionRepository is Ownable, PoolACL {
         _;
     }
 
-       modifier activePoolPositionOnly(address pool, address trader) {
+   modifier activePoolPositionOnly(address pool, address trader) {
         require(
             _positions[pool][trader].active,
             "Position doesn't not exists"
