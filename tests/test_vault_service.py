@@ -1,7 +1,7 @@
 import pytest
 
 
-def _prepare_actions(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
+def _prepare_actions_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
     contract_gtoken.transferOwnership(contract_vaultservice)
     contract_underlyingtoken.mint(accounts[0], amount)
     contract_underlyingtoken.approve(contract_vaultservice, amount)
@@ -23,7 +23,7 @@ def isolation(fn_isolation):
 
 def test_add_liquidity(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
     amount = 1e18
-    _prepare_actions(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
+    _prepare_actions_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
     balance_gtoken_prev, balance_underlyingtoken_prev, balance_gtoken_curr, balance_underlyingtoken_curr = \
         _add_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
     assert balance_gtoken_prev + amount == balance_gtoken_curr & \
@@ -32,7 +32,7 @@ def test_add_liquidity(accounts, contract_gtoken, contract_underlyingtoken, cont
 
 def test_remove_liquidity(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
     amount = 1e18
-    _prepare_actions(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
+    _prepare_actions_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
     _add_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
     balance_gtoken_prev = contract_gtoken.balanceOf(accounts[0])
     balance_underlyingtoken_prev = contract_underlyingtoken.balanceOf(accounts[0])
