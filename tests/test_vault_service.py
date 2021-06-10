@@ -32,7 +32,7 @@ def test_add_liquidity(accounts, contract_gtoken, contract_underlyingtoken, cont
 
 def test_add_liquidity_MAX(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
     amount = 100e18
-    _prepare_actions(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
+    _prepare_actions_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
     with reverts("NOT MORE in TESTS"):
         contract_vaultservice.addLiquidity(amount)
     
