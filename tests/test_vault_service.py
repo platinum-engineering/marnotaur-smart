@@ -46,5 +46,5 @@ def test_remove_liquidity(accounts, contract_gtoken, contract_underlyingtoken, c
     contract_vaultservice.removeLiquidity(amount)
     balance_gtoken_curr = contract_gtoken.balanceOf(accounts[0])
     balance_underlyingtoken_curr = contract_underlyingtoken.balanceOf(accounts[0])
-    assert balance_gtoken_prev == balance_gtoken_curr + amount & \
-           balance_underlyingtoken_prev + amount == balance_underlyingtoken_curr
+    assert (balance_gtoken_prev == balance_gtoken_curr + amount) & \
+           (balance_underlyingtoken_prev + amount == balance_underlyingtoken_curr)

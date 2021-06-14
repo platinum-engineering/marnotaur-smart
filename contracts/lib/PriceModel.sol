@@ -49,7 +49,7 @@ contract PriceModel {
         }
 
         uint256 utilisationRate_s1 =
-        (totalLiquidity - availableLiquidity).div(totalLiquidity).mul(100);
+        (totalLiquidity - availableLiquidity).div(totalLiquidity);
 //        uint256 utilisationRate_s1 =
 //        (totalLiquidity - availableLiquidity).mul(S_1).div(totalLiquidity);
         if (utilisationRate_s1 < U_OPTIMAL_S1) {

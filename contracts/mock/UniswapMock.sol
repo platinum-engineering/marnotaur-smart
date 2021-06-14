@@ -31,7 +31,7 @@ contract UniswapRouterMock is IUniswapV2Router02 {
         uint256 deadline
     ) external override returns (uint256[] memory amounts) {
 
-         address tokenIn = path[0];
+        address tokenIn = path[0];
         address tokenOut = path[1];
         // transfers
         ERC20(tokenIn).transferFrom(msg.sender, address(this), amountInMax);

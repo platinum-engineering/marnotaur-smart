@@ -250,8 +250,8 @@ contract PoolService is Ownable {
 
         // swapTokens
         _vaultService.swapTokensForExactTokens(
-             amountOut,
-             amountInMax,
+            amountOut,
+            amountInMax,
             path,
             deadline
         );
