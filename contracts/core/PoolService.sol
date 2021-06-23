@@ -45,9 +45,6 @@ contract PoolService is Ownable {
     VaultService private _vaultService;
     DieselToken private _dieselToken;
 
-    // Swap operators
-    IUniswapV2Router02 private _uniswapRouter;
-
     // Risk Level
     bool private _isHighRisk;
 
@@ -71,9 +68,6 @@ contract PoolService is Ownable {
         _dieselToken = DieselToken(_vaultService.getDieselToken());
         _underlyingTokenAddress = _vaultService.getUnderlyingToken();
 
-        _uniswapRouter = IUniswapV2Router02(
-            _addressRepository.getUniswapRouter()
-        );
         _allowedTokens[_underlyingTokenAddress] = true;
         _allowedTokensList.push(_underlyingTokenAddress);
 

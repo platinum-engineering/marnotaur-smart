@@ -17,20 +17,27 @@ import "../lib/console.sol";
 contract PoolRepository is Ownable {
     using SafeMath for uint256;
 
-    address[] private _pools;
+    enum Status {Active, Deprecated, Expired}
+    struct Pool {
+        address addr;
+        Status status;
+    }
+
+    Pool[] private _pools;
 
     function getPoolsCount() public view returns (uint256) {
         return _pools.length;
     }
 
-    function getPoolById(uint256 id) external view returns (address) {
-        return _pools[id];
+    function getPoolById(uint256 id) external view returns (address, Status) {
+        return (_pools[id].addr, _pools[id].status);
     }
 
     function addPool(address newPoolAddress) external onlyOwner {
-        _pools.push(newPoolAddress);
+        _pools.push(Pool(newPoolAddress, Status.Active));
     }
 
-
-
+    function setStatusPool(uint256 id, Status status) external onlyOwner {
+        _pools[id].status = status;
+    }
 }

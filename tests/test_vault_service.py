@@ -30,6 +30,7 @@ def test_add_liquidity(accounts, contract_gtoken, contract_underlyingtoken, cont
     assert balance_gtoken_prev + amount == balance_gtoken_curr & \
            balance_underlyingtoken_prev == balance_underlyingtoken_curr + amount
 
+
 def test_add_liquidity_MAX(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
     amount = 100e18
     _prepare_actions_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
