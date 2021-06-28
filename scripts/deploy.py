@@ -10,11 +10,13 @@ UNISWAP_PAIR_LINK = "0xd8bD0a1cB028a31AA859A21A3758685a95dE4623"
 
 
 def generate(token_address, uniswap_pair_address, account, positionRepository, poolRepository, priceRepository, addressRepository):
-    gtoken = DieselToken.deploy('Test', 'TST', {'from': account})
-    vault = VaultService.deploy(addressRepository, token_address, gtoken, {'from': account})
-    pool = PoolService.deploy(addressRepository, vault, True, {'from': account})
+    gtoken = DieselToken.deploy('Test', 'TST', {'from': account}, publish_source=True)
+    vault = VaultService.deploy(addressRepository, token_address, gtoken, {'from': account}, publish_source=True)
+    pool = PoolService.deploy(addressRepository, vault, True, {'from': account}, publish_source=True)
 
     vault.transferOwnership(pool, {'from': account})
+    gtoken.transferOwnership(vault, {'from': account})
+
     positionRepository.addToPoolServicesList(pool, {'from': account})
     priceRepository.addToPoolServicesList(pool, {'from': account})
     poolRepository.addPool(pool, {'from': account})
@@ -26,11 +28,11 @@ def generate(token_address, uniswap_pair_address, account, positionRepository, p
 def main():
     account = accounts.load('deployment_rinkeby_account')
 
-    positionRepository = PositionRepository.deploy({'from': account})
-    poolRepository = PoolRepository.deploy({'from': account})
-    priceRepository = PriceRepository.deploy({'from': account})
+    positionRepository = PositionRepository.deploy({'from': account}, publish_source=True)
+    poolRepository = PoolRepository.deploy({'from': account}, publish_source=True)
+    priceRepository = PriceRepository.deploy({'from': account}, publish_source=True)
 
-    addressRepository = AddressRepository.deploy({'from': account})
+    addressRepository = AddressRepository.deploy({'from': account}, publish_source=True)
     addressRepository.setPositionRepository(positionRepository)
     addressRepository.setPoolRepository(poolRepository)
     addressRepository.setPriceRepository(priceRepository)
@@ -48,7 +50,7 @@ def main():
     poolRepository: {poolRepository}
     positionRepository: {positionRepository}
     priceRepository: {priceRepository}
-    
+
     gToken4DAI: {gToken4DAI}
     vault4DAI: {vault4DAI}
     pool4DAI: {pool4DAI}
