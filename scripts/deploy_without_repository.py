@@ -1,9 +1,12 @@
 import sys
 sys.path.insert(0, "./scripts")
 from brownie import accounts
-from helpers import get_repository, generate_gvp
+from helpers import get_repository_with_addresses, generate_gvp
 
-UNISWAP_ROUTER = "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
+POSITION_REPOSITORY = "0x89267e15b0faECD6B6d28a20148ed662D481B269"
+POOL_REPOSITORY = "0x7E2c9c5E3Dc138b9B2e8C14E1d5bEFCb72aeBa73"
+PRICE_REPOSITORY = "0x35E9e4D9B79edF67dfC4A6C2cF1f491157647F18"
+ADDRESS_REPOSITORY = "0xbC58035c8bC416c7a446335367Fb2f540Efd7E7e"
 DAI_ADDRESS = "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa"
 USDC_ADDRESS = "0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b"
 LINK_ADDRESS = "0x01BE23585060835E02B77ef475b0Cc51aA1e0709"
@@ -15,9 +18,12 @@ UNISWAP_PAIR_LINK = "0xd8bD0a1cB028a31AA859A21A3758685a95dE4623"
 def main():
     account = accounts.load('deployment_rinkeby_account')
 
-    positionRepository, poolRepository, priceRepository, addressRepository = get_repository(
-        account, UNISWAP_ROUTER
+    positionRepository, poolRepository, priceRepository, addressRepository = get_repository_with_addresses(
+        POSITION_REPOSITORY, POOL_REPOSITORY, PRICE_REPOSITORY, ADDRESS_REPOSITORY
     )
+
+    for i in range(poolRepository.getPoolsCount()):
+        poolRepository.setStatusPool(i, 2, {'from': account})
 
     gToken4DAI, vault4DAI, pool4DAI = generate_gvp(
         account, DAI_ADDRESS, UNISWAP_PAIR_DAI, positionRepository, poolRepository, priceRepository, addressRepository
@@ -33,11 +39,6 @@ def main():
     ********************************************************
     Report
     ********************************************************
-    positionRepository: {positionRepository}
-    poolRepository: {poolRepository}
-    priceRepository: {priceRepository}
-    addressRepository: {addressRepository}
-
     gToken4DAI: {gToken4DAI}
     vault4DAI: {vault4DAI}
     pool4DAI: {pool4DAI}
