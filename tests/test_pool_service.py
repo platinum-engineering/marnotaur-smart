@@ -1,5 +1,6 @@
 import pytest
 import datetime
+from brownie import reverts
 from test_vault_service import _prepare_actions_liquidity, _add_liquidity
 
 
@@ -25,6 +26,24 @@ def _allow_token_for_trading(contract_gtoken, contract_poolservice):
     contract_poolservice.allowTokenForTrading(contract_gtoken, contract_poolservice)
 
 
+@pytest.fixture(autouse=True)
+def isolation(fn_isolation):
+    pass
+
+
+def test_transfer_ownership(accounts, contract_poolservice):
+    new_account = accounts.add()
+    contract_poolservice.transferOwnership(new_account)
+    assert contract_poolservice.owner() == new_account
+    with reverts("Ownable: caller is not the owner"):
+        contract_poolservice.transferOwnership(accounts[0])
+
+
+def test_renounce_ownership(contract_poolservice):
+    contract_poolservice.renounceOwnership()
+    assert contract_poolservice.owner() == '0x0000000000000000000000000000000000000000'
+
+
 def test_allow_token_for_trading(contract_vaultservice, contract_gtoken, contract_pricerepository, contract_poolservice):
     _prepare_allow_token_for_trading(contract_vaultservice, contract_pricerepository, contract_poolservice)
     _allow_token_for_trading(contract_gtoken, contract_poolservice)
@@ -35,16 +54,14 @@ def test_allow_token_for_trading(contract_vaultservice, contract_gtoken, contrac
     assert find_token
 
 
-@pytest.fixture(autouse=True)
-def isolation(fn_isolation):
-    pass
-
-
 def test_open_position(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_positionrepository, contract_poolservice):
     amount = 1e18
     _prepare_open_position(contract_positionrepository, contract_poolservice)
     _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
-    assert contract_poolservice.hasOpenPosition()
+    print('~~~', contract_vaultservice.getTotalLiquidity(), contract_vaultservice.getAvailableLiquidity())
+    assert (contract_poolservice.hasOpenPosition()) & \
+           (contract_vaultservice.getTotalLiquidity() == amount * 10) & \
+           (contract_vaultservice.getAvailableLiquidity() == amount * 10 - amount * 4)
 
 
 def test_close_position(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_positionrepository, contract_poolservice):
@@ -52,7 +69,9 @@ def test_close_position(accounts, contract_gtoken, contract_underlyingtoken, con
     _prepare_open_position(contract_positionrepository, contract_poolservice)
     _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
     _close_position(contract_poolservice)
-    assert not contract_poolservice.hasOpenPosition()
+    assert (not contract_poolservice.hasOpenPosition()) & \
+           (contract_vaultservice.getTotalLiquidity() == contract_poolservice.calcAmountInterested(accounts[0]) + amount * 9) & \
+           (contract_vaultservice.getAvailableLiquidity() == contract_poolservice.calcAmountInterested(accounts[0]) + amount * 9)
 
 
 def test_swap_tokens_for_exact_tokens(accounts, contract_uniswaprouter, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_pricerepository, contract_positionrepository, contract_poolservice):

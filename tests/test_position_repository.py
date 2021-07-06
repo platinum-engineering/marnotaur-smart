@@ -7,6 +7,11 @@ def _open_position_for_testing(amount, accounts, contract_gtoken, contract_under
     _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
 
 
+@pytest.fixture(autouse=True)
+def isolation(fn_isolation):
+    pass
+
+
 def test_position(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice, contract_positionrepository):
     amount = 1e18
     _open_position_for_testing(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice, contract_positionrepository)

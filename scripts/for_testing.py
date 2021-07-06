@@ -10,10 +10,14 @@ def main():
 
     vault = VaultService.at(VAULT)
     pool = PoolService.at(POOL)
-
     underlyingtoken = interface.IERC20(DAI_ADDRESS)
+
     underlyingtoken.approve(vault, DAI_AMOUNT, {'from': account})
     vault.addLiquidity(DAI_AMOUNT, {'from': account})
     vault.removeLiquidity(DAI_AMOUNT, {'from': account})
+
+    underlyingtoken.approve(vault, DAI_AMOUNT, {'from': account})
+    vault.addLiquidity(DAI_AMOUNT, {'from': account})
+    underlyingtoken.approve(vault, DAI_AMOUNT/5, {'from': account})
     pool.openPosition(DAI_AMOUNT/5, {'from': account})
     pool.closePosition({'from': account})

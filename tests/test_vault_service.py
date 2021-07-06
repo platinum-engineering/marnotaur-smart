@@ -22,13 +22,28 @@ def isolation(fn_isolation):
     pass
 
 
+def test_transfer_ownership(accounts, contract_vaultservice):
+    new_account = accounts.add()
+    contract_vaultservice.transferOwnership(new_account)
+    assert contract_vaultservice.owner() == new_account
+    with reverts("Ownable: caller is not the owner"):
+        contract_vaultservice.transferOwnership(accounts[0])
+
+
+def test_renounce_ownership(contract_vaultservice):
+    contract_vaultservice.renounceOwnership()
+    assert contract_vaultservice.owner() == '0x0000000000000000000000000000000000000000'
+
+
 def test_add_liquidity(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
     amount = 1e18
     _prepare_actions_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
     balance_gtoken_prev, balance_underlyingtoken_prev, balance_gtoken_curr, balance_underlyingtoken_curr = \
         _add_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice)
-    assert balance_gtoken_prev + amount == balance_gtoken_curr & \
-           balance_underlyingtoken_prev == balance_underlyingtoken_curr + amount
+    assert (balance_gtoken_prev + amount == balance_gtoken_curr) & \
+           (balance_underlyingtoken_prev == balance_underlyingtoken_curr + amount) & \
+           (contract_vaultservice.getTotalLiquidity() == amount) & \
+           (contract_vaultservice.getAvailableLiquidity() == amount)
 
 
 def test_add_liquidity_MAX(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):
@@ -48,4 +63,6 @@ def test_remove_liquidity(accounts, contract_gtoken, contract_underlyingtoken, c
     balance_gtoken_curr = contract_gtoken.balanceOf(accounts[0])
     balance_underlyingtoken_curr = contract_underlyingtoken.balanceOf(accounts[0])
     assert (balance_gtoken_prev == balance_gtoken_curr + amount) & \
-           (balance_underlyingtoken_prev + amount == balance_underlyingtoken_curr)
+           (balance_underlyingtoken_prev + amount == balance_underlyingtoken_curr) & \
+           (contract_vaultservice.getTotalLiquidity() == 0) & \
+           (contract_vaultservice.getAvailableLiquidity() == 0)
