@@ -164,11 +164,10 @@ contract PoolService is Ownable {
         console.log(amountInterested);
 
         // Amount which should be pushed back to pool
-        uint256 backToVault = leveragedAmount + amountInterested;
+        uint256 backToVault = leveragedAmount.add(amountInterested).sub(amount);
 
         console.log(backToVault);
-        uint256 amountToReturn =
-            totalBalanceInVaultTokens.add(amount).sub(backToVault);
+        uint256 amountToReturn = totalBalanceInVaultTokens.sub(backToVault);
 
         console.log(amountToReturn);
 
