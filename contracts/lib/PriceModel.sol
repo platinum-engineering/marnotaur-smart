@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Gearbox. Uncollateralized protocol for margin trading
+// Gearbox forked by Platinum . Uncollateralized protocol for margin trading
 pragma solidity ^0.6.0;
 
 import "OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/math/SafeMath.sol";
