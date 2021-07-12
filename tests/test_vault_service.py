@@ -1,5 +1,5 @@
 import pytest
-from brownie import Wei, reverts
+from brownie import reverts
 
 
 def _prepare_actions_liquidity(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice):

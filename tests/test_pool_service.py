@@ -22,6 +22,7 @@ def _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, 
 def _close_position(contract_poolservice):
     contract_poolservice.closePosition()
 
+
 def _allow_token_for_trading(contract_gtoken, contract_poolservice):
     contract_poolservice.allowTokenForTrading(contract_gtoken, contract_poolservice)
 
@@ -58,8 +59,10 @@ def test_open_position(accounts, contract_gtoken, contract_underlyingtoken, cont
     amount = 1e18
     _prepare_open_position(contract_positionrepository, contract_poolservice)
     _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
-    print('~~~', contract_vaultservice.getTotalLiquidity(), contract_vaultservice.getAvailableLiquidity())
+    position_amount, position_leverage_amount, _ = contract_positionrepository.getPositionDetails(contract_poolservice, accounts[0])
     assert (contract_poolservice.hasOpenPosition()) & \
+           (position_amount == amount) & \
+           (position_leverage_amount == amount*4) & \
            (contract_vaultservice.getTotalLiquidity() == amount * 10) & \
            (contract_vaultservice.getAvailableLiquidity() == amount * 10 - amount * 4)
 
@@ -68,10 +71,49 @@ def test_close_position(accounts, contract_gtoken, contract_underlyingtoken, con
     amount = 1e18
     _prepare_open_position(contract_positionrepository, contract_poolservice)
     _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
+    vaultservice_underlyingtoken_balance_prev = contract_underlyingtoken.balanceOf(contract_vaultservice)
+    underlyingtoken_balance_prev = contract_underlyingtoken.balanceOf(accounts[0])
+    position_amount, position_leverage_amount, _ = contract_positionrepository.getPositionDetails(contract_poolservice, accounts[0])
+    vaultservice_total_liquidity_prev = contract_vaultservice.getTotalLiquidity()
+    vaultservice_available_liquidity_prev = contract_vaultservice.getAvailableLiquidity()
     _close_position(contract_poolservice)
+    calcAmountInterested = contract_poolservice.calcAmountInterested(accounts[0])
+    vaultservice_underlyingtoken_balance_curr = contract_underlyingtoken.balanceOf(contract_vaultservice)
+    underlyingtoken_balance_curr = contract_underlyingtoken.balanceOf(accounts[0])
+    vaultservice_total_liquidity_curr = contract_vaultservice.getTotalLiquidity()
+    vaultservice_available_liquidity_curr = contract_vaultservice.getAvailableLiquidity()
     assert (not contract_poolservice.hasOpenPosition()) & \
-           (contract_vaultservice.getTotalLiquidity() == contract_poolservice.calcAmountInterested(accounts[0]) + amount * 9) & \
-           (contract_vaultservice.getAvailableLiquidity() == contract_poolservice.calcAmountInterested(accounts[0]) + amount * 9)
+           (vaultservice_total_liquidity_prev <= vaultservice_total_liquidity_curr + calcAmountInterested + position_amount) & \
+           (vaultservice_available_liquidity_curr <= vaultservice_available_liquidity_prev + calcAmountInterested + position_leverage_amount - position_amount) & \
+           (underlyingtoken_balance_curr <= underlyingtoken_balance_prev + position_amount) & \
+           (vaultservice_underlyingtoken_balance_prev <= vaultservice_underlyingtoken_balance_curr + position_amount)
+
+
+def test_liquidate_position(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_positionrepository, contract_poolservice):
+    amount = 1e18
+    new_account = accounts.add()
+    _prepare_open_position(contract_positionrepository, contract_poolservice)
+    _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
+    vaultservice_underlyingtoken_balance_prev = contract_underlyingtoken.balanceOf(contract_vaultservice)
+    underlyingtoken_balance_prev = contract_underlyingtoken.balanceOf(accounts[0])
+    underlyingtoken_new_account_balance_prev = contract_underlyingtoken.balanceOf(new_account)
+    position_amount, position_leverage_amount, _ = contract_positionrepository.getPositionDetails(contract_poolservice, accounts[0])
+    liquidation_amount = position_leverage_amount * 10 / 100
+    vaultservice_total_liquidity_prev = contract_vaultservice.getTotalLiquidity()
+    vaultservice_available_liquidity_prev = contract_vaultservice.getAvailableLiquidity()
+    contract_poolservice.liquidatePosition(accounts[0], {'from': new_account})
+    calcAmountInterested = contract_poolservice.calcAmountInterested(accounts[0])
+    vaultservice_underlyingtoken_balance_curr = contract_underlyingtoken.balanceOf(contract_vaultservice)
+    underlyingtoken_balance_curr = contract_underlyingtoken.balanceOf(accounts[0])
+    underlyingtoken_new_account_balance_curr = contract_underlyingtoken.balanceOf(new_account)
+    vaultservice_total_liquidity_curr = contract_vaultservice.getTotalLiquidity()
+    vaultservice_available_liquidity_curr = contract_vaultservice.getAvailableLiquidity()
+    assert (not contract_poolservice.hasOpenPosition()) & \
+           (vaultservice_total_liquidity_prev <= vaultservice_total_liquidity_curr + calcAmountInterested + position_amount) & \
+           (vaultservice_available_liquidity_curr <= vaultservice_available_liquidity_prev + calcAmountInterested + position_leverage_amount - position_amount) & \
+           (underlyingtoken_balance_curr <= underlyingtoken_balance_prev + position_amount - liquidation_amount) & \
+           (vaultservice_underlyingtoken_balance_prev <= vaultservice_underlyingtoken_balance_curr + position_amount) & \
+           (underlyingtoken_new_account_balance_curr == underlyingtoken_new_account_balance_prev + liquidation_amount)
 
 
 def test_swap_tokens_for_exact_tokens(accounts, contract_uniswaprouter, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_pricerepository, contract_positionrepository, contract_poolservice):
