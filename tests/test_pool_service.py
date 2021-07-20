@@ -45,6 +45,14 @@ def test_renounce_ownership(contract_poolservice):
     assert contract_poolservice.owner() == '0x0000000000000000000000000000000000000000'
 
 
+def test_get_vault_service(contract_vaultservice, contract_poolservice):
+    assert contract_poolservice.getVaultService() == contract_vaultservice.address
+
+
+def test_get_risk_level(contract_poolservice):
+    assert contract_poolservice.getRiskLevel()
+
+
 def test_allow_token_for_trading(contract_vaultservice, contract_gtoken, contract_pricerepository, contract_poolservice):
     _prepare_allow_token_for_trading(contract_vaultservice, contract_pricerepository, contract_poolservice)
     _allow_token_for_trading(contract_gtoken, contract_poolservice)
@@ -101,6 +109,13 @@ def test_liquidate_position(accounts, contract_gtoken, contract_underlyingtoken,
     liquidation_amount = position_leverage_amount * 10 / 100
     vaultservice_total_liquidity_prev = contract_vaultservice.getTotalLiquidity()
     vaultservice_available_liquidity_prev = contract_vaultservice.getAvailableLiquidity()
+    with reverts("Allowed for who can liquidate position only"):
+        contract_poolservice.liquidatePosition(accounts[0], {'from': new_account})
+    contract_poolservice.addToLiquidatePositionList(new_account)
+    contract_poolservice.removeFromLiquidatePositionList(new_account)
+    with reverts("Allowed for who can liquidate position only"):
+        contract_poolservice.liquidatePosition(accounts[0], {'from': new_account})
+    contract_poolservice.addToLiquidatePositionList(new_account)
     contract_poolservice.liquidatePosition(accounts[0], {'from': new_account})
     calcAmountInterested = contract_poolservice.calcAmountInterested(accounts[0])
     vaultservice_underlyingtoken_balance_curr = contract_underlyingtoken.balanceOf(contract_vaultservice)
