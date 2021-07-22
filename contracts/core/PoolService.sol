@@ -86,12 +86,8 @@ contract PoolService is Ownable {
         _;
     }
 
-    function addToLiquidatePositionList(address addr) external onlyOwner {
-        _liquidatePositionList[addr] = true;
-    }
-
-    function removeFromLiquidatePositionList(address addr) external onlyOwner {
-        _liquidatePositionList[addr] = false;
+    function setLiquidatorStatus(address addr, bool status) external onlyOwner {
+        _liquidatePositionList[addr] = status;
     }
 
     function allowTokenForTrading(address token, address priceFeedContract) external onlyOwner {
@@ -111,7 +107,7 @@ contract PoolService is Ownable {
         return _allowedTokensList[id];
     }
 
-    function hasOpenPosition() external view returns(bool) {
+    function hasOpenPosition() external view returns (bool) {
         return _PositionRepository.hasOpenPosition(address(this), msg.sender);
     }
 

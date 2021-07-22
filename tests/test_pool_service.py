@@ -111,11 +111,11 @@ def test_liquidate_position(accounts, contract_gtoken, contract_underlyingtoken,
     vaultservice_available_liquidity_prev = contract_vaultservice.getAvailableLiquidity()
     with reverts("Allowed for who can liquidate position only"):
         contract_poolservice.liquidatePosition(accounts[0], {'from': new_account})
-    contract_poolservice.addToLiquidatePositionList(new_account)
-    contract_poolservice.removeFromLiquidatePositionList(new_account)
+    contract_poolservice.setLiquidatorStatus(new_account, True)
+    contract_poolservice.setLiquidatorStatus(new_account, False)
     with reverts("Allowed for who can liquidate position only"):
         contract_poolservice.liquidatePosition(accounts[0], {'from': new_account})
-    contract_poolservice.addToLiquidatePositionList(new_account)
+    contract_poolservice.setLiquidatorStatus(new_account, True)
     contract_poolservice.liquidatePosition(accounts[0], {'from': new_account})
     calcAmountInterested = contract_poolservice.calcAmountInterested(accounts[0])
     vaultservice_underlyingtoken_balance_curr = contract_underlyingtoken.balanceOf(contract_vaultservice)
