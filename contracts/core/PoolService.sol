@@ -33,6 +33,8 @@ contract PoolService is Ownable {
     /// @dev Token address for vault asset
     address private _underlyingTokenAddress;
 
+
+    mapping(address => bool) private _liquidatePositionList;
     mapping(address => bool) _allowedTokens;
     address[] _allowedTokensList;
 
@@ -79,6 +81,15 @@ contract PoolService is Ownable {
         _;
     }
 
+    modifier onlyLiquidatePosition() {
+        require(_liquidatePositionList[msg.sender], "Allowed for who can liquidate position only");
+        _;
+    }
+
+    function setLiquidatorStatus(address addr, bool status) external onlyOwner {
+        _liquidatePositionList[addr] = status;
+    }
+
     function allowTokenForTrading(address token, address priceFeedContract) external onlyOwner {
         require(token != address(0), "0x0 address is not allowed");
         require(priceFeedContract != address(0), "0x0 pricefeed address is not allowed");
@@ -96,7 +107,7 @@ contract PoolService is Ownable {
         return _allowedTokensList[id];
     }
 
-    function hasOpenPosition() external view returns(bool) {
+    function hasOpenPosition() external view returns (bool) {
         return _PositionRepository.hasOpenPosition(address(this), msg.sender);
     }
 
@@ -133,7 +144,7 @@ contract PoolService is Ownable {
 
     // @dev liquidate leverage if it meets required conditions
     // and return premium for liquidator
-    function liquidatePosition(address holder) external {
+    function liquidatePosition(address holder) external onlyLiquidatePosition {
         _closePosition(holder, msg.sender);
         emit LiquidateLeverage(holder, msg.sender);
     }
