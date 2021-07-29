@@ -1,7 +1,7 @@
 from brownie import PoolService, VaultService, DieselToken, PositionRepository, PoolRepository, PriceRepository, AddressRepository, UniswapRouterMock
 
 
-def generate_gvp(account, token_address, uniswap_pair_address, positionRepository, poolRepository, priceRepository, addressRepository, internal=False):
+def generate_gvp(account, token_address, positionRepository, poolRepository, priceRepository, addressRepository, internal=False):
     if internal:
         gtoken = DieselToken.deploy('Test', 'TST', {'from': account})
         vault = VaultService.deploy(addressRepository, token_address, gtoken, {'from': account})
@@ -17,7 +17,6 @@ def generate_gvp(account, token_address, uniswap_pair_address, positionRepositor
     positionRepository.addToPoolServicesList(pool, {'from': account})
     priceRepository.addToPoolServicesList(pool, {'from': account})
     poolRepository.addPool(pool, {'from': account})
-    pool.allowTokenForTrading(token_address, uniswap_pair_address, {'from': account})
 
     return gtoken, vault, pool
 

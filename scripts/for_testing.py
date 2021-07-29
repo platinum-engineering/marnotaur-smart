@@ -1,32 +1,44 @@
+import sys
+sys.path.insert(0, "./scripts")
 from brownie import PoolService, VaultService, interface, accounts
+import datetime
+from constants import UNISWAP_ROUTER, TOKENS, CHAINLINKS, SETS
 
-VAULT = "0xA2f8727e09438A553c356b4bD5816265eae0D580"
-POOL = "0x1C7040B1688c0FACf013734c515E48BF7715a87F"
 
-DAI_ADDRESS = "0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735"
-DAI_AMOUNT = 1e18
+def swap_token(account, pool, underlyingtoken, uniswap_router, token, amount):
+    deadline = int((datetime.datetime.now() + datetime.timedelta(hours=1)).timestamp())
+    ratioOut, ratioIn = uniswap_router.getAmountsIn(1, [underlyingtoken.address, TOKENS[token]])
+    pool.allowTokenForTrading(TOKENS[token], CHAINLINKS[token], {'from': account})
+    pool.swapTokensForExactTokens(
+        amount/ratioOut, amount/ratioIn, [underlyingtoken.address, TOKENS[token]], deadline, {'from': account}
+    )
 
-LINK_ADDRESS = "0x01BE23585060835E02B77ef475b0Cc51aA1e0709"
-UNISWAP_PAIR_LINK_ADDRESS = "0xd8bD0a1cB028a31AA859A21A3758685a95dE4623"
+
+def filling_gvp(account, vault_addr, pool_addr, token, tokens, amount):
+    vault = VaultService.at(vault_addr)
+    pool = PoolService.at(pool_addr)
+    underlyingtoken = interface.IERC20(TOKENS[token])
+    uniswap_router = interface.IUniswapV2Router02(UNISWAP_ROUTER)
+
+    underlyingtoken.approve(vault, amount, {'from': account})
+    vault.addLiquidity(amount, {'from': account})
+    underlyingtoken.approve(vault, amount/5, {'from': account})
+    pool.openPosition(amount/5, {'from': account})
+    for item in tokens:
+        swap_token(account, pool, underlyingtoken, uniswap_router, item, amount / (5 * len(tokens)))
+    pool.closePosition({'from': account})
+    vault.removeLiquidity(amount, {'from': account})
+
+    underlyingtoken.approve(vault, amount, {'from': account})
+    vault.addLiquidity(amount, {'from': account})
+    underlyingtoken.approve(vault, amount/5, {'from': account})
+    pool.openPosition(amount/5, {'from': account})
+    for item in tokens:
+        swap_token(account, pool, underlyingtoken, uniswap_router, item, amount / (5 * len(tokens)))
 
 
 def main():
     account = accounts.load('deployment_rinkeby_account')
-
-    vault = VaultService.at(VAULT)
-    pool = PoolService.at(POOL)
-    underlyingtoken = interface.IERC20(DAI_ADDRESS)
-
-    underlyingtoken.approve(vault, DAI_AMOUNT, {'from': account})
-    vault.addLiquidity(DAI_AMOUNT, {'from': account})
-    vault.removeLiquidity(DAI_AMOUNT, {'from': account})
-
-    underlyingtoken.approve(vault, DAI_AMOUNT, {'from': account})
-    vault.addLiquidity(DAI_AMOUNT, {'from': account})
-    underlyingtoken.approve(vault, DAI_AMOUNT/5, {'from': account})
-    pool.openPosition(DAI_AMOUNT/5, {'from': account})
-    pool.closePosition({'from': account})
-    vault.removeLiquidity(DAI_AMOUNT, {'from': account})
-
-    pool.allowTokenForTrading(LINK_ADDRESS, UNISWAP_PAIR_LINK_ADDRESS, {'from': account})
-
+    amount = 1e17
+    for item in SETS:
+        filling_gvp(account, item['VAULT'], item['POOL'], item['TOKEN'], item['TOKENS'], amount)
