@@ -135,11 +135,11 @@ def test_swap_tokens_for_exact_tokens(accounts, contract_uniswaprouter, contract
     amount = 1e17
     amountOut = 1e17
     amountInMax = 1e17
-    deadline = (datetime.datetime.now() + datetime.timedelta(days=1)).timestamp()
-    _prepare_open_position(contract_positionrepository, contract_poolservice)
-    _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
+    deadline = (datetime.datetime.now() + datetime.timedelta(hours=1)).timestamp()
     _prepare_allow_token_for_trading(contract_vaultservice, contract_pricerepository, contract_poolservice)
     _allow_token_for_trading(contract_gtoken, contract_poolservice)
+    _prepare_open_position(contract_positionrepository, contract_poolservice)
+    _open_position(amount, accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_poolservice)
     contract_gtoken.mint(contract_uniswaprouter, amountInMax, {'from': contract_vaultservice})
     vaultservice_gtoken_balance_prev = contract_gtoken.balanceOf(contract_vaultservice)
     vaultservice_underlyingtoken_balance_prev = contract_underlyingtoken.balanceOf(contract_vaultservice)
