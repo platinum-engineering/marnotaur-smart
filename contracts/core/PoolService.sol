@@ -76,11 +76,6 @@ contract PoolService is Ownable {
         _isHighRisk = isHighRisk;
     }
 
-    modifier allowedTokensOnly(address token) {
-        require(_allowedTokens[token], "This token is not allowed");
-        _;
-    }
-
     modifier onlyLiquidatePosition() {
         require(_liquidatePositionList[msg.sender], "Allowed for who can liquidate position only");
         _;
