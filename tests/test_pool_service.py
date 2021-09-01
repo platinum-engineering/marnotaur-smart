@@ -63,6 +63,13 @@ def test_allow_token_for_trading(contract_vaultservice, contract_gtoken, contrac
     assert find_token
 
 
+def test_disallow_token_for_trading(contract_vaultservice, contract_gtoken, contract_pricerepository, contract_poolservice):
+    test_allow_token_for_trading(contract_vaultservice, contract_gtoken, contract_pricerepository, contract_poolservice)
+    contract_poolservice.disallowTokenForTrading(contract_gtoken)
+    with reverts("This token is not allowed"):
+        contract_poolservice.swapTokensForExactTokens(0, 0, [contract_gtoken], 0)
+
+
 def test_open_position(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_positionrepository, contract_poolservice):
     amount = 1e18
     _prepare_open_position(contract_positionrepository, contract_poolservice)
