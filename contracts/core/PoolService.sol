@@ -52,8 +52,8 @@ contract PoolService is Ownable {
 
     // Leverage events
     event OpenLeverage(address indexed sender, uint256 amount);
-    event CloseLeverage(address indexed sender);
-    event LiquidateLeverage(address indexed sender, address indexed liquidator);
+    event CloseLeverage(address indexed sender, uint256 collateral, uint256 debt, uint256 currentBalance, uint256 apr);
+    event LiquidateLeverage(address indexed sender, address indexed liquidator, uint256 collateral, uint256 debt, uint256 currentBalance, uint256 apr);
 
     constructor(address addressRepository, address vault, bool isHighRisk) public {
         // Repositories & services
@@ -88,10 +88,21 @@ contract PoolService is Ownable {
     function allowTokenForTrading(address token, address priceFeedContract) external onlyOwner {
         require(token != address(0), "0x0 address is not allowed");
         require(priceFeedContract != address(0), "0x0 pricefeed address is not allowed");
+
         _vaultService.approveOnUniswap(token);
         _priceRepository.addPriceFeed(token, _underlyingTokenAddress, priceFeedContract);
         _allowedTokens[token] = true;
-        _allowedTokensList.push(token);
+
+        bool notExistToken = true;
+        for (uint256 i = 0; i < _allowedTokensList.length; i++) {
+            if (_allowedTokensList[i] == token) {
+                notExistToken = false;
+            }
+        }
+
+        if (notExistToken) {
+            _allowedTokensList.push(token);
+        }
     }
 
     function allowedTokenCount() external view returns (uint256) {
@@ -106,13 +117,28 @@ contract PoolService is Ownable {
         return _PositionRepository.hasOpenPosition(address(this), msg.sender);
     }
 
-
     function disallowTokenForTrading(address token) external onlyOwner {
         require(
             token != _underlyingTokenAddress,
             "You cant disallow base vault token"
         );
+
         _allowedTokens[token] = false;
+
+        bool existToken = false;
+        uint256 indexToken = _allowedTokensList.length - 1;
+        for (uint256 i = 0; i < _allowedTokensList.length; i++) {
+            if (_allowedTokensList[i] == token) {
+                existToken = true;
+                indexToken = i;
+            }
+        }
+        if (existToken) {
+            if (indexToken != _allowedTokensList.length - 1) {
+                _allowedTokensList[indexToken] = _allowedTokensList[_allowedTokensList.length - 1];
+            }
+            _allowedTokensList.pop();
+        }
     }
 
     // open Leverage for client
@@ -133,15 +159,27 @@ contract PoolService is Ownable {
     }
 
     function closePosition() external {
+        (uint256 collateral, uint256 debt, uint256 currentBalance, uint256 apr) = _infoClosePosition(msg.sender);
+
         _closePosition(msg.sender, address(0));
-        emit CloseLeverage(msg.sender);
+        emit CloseLeverage(msg.sender, collateral, debt, currentBalance, apr);
     }
 
     // @dev liquidate leverage if it meets required conditions
     // and return premium for liquidator
     function liquidatePosition(address holder) external onlyLiquidatePosition {
+        (uint256 collateral, uint256 debt, uint256 currentBalance, uint256 apr) = _infoClosePosition(holder);
+
         _closePosition(holder, msg.sender);
-        emit LiquidateLeverage(holder, msg.sender);
+        emit LiquidateLeverage(holder, msg.sender, collateral, debt, currentBalance, apr);
+    }
+
+    function _infoClosePosition(address holder) internal view returns (uint256, uint256, uint256, uint256) {
+        (uint256 collateral, uint256 debt, ) = _PositionRepository.getPositionDetails(address(this), holder);
+        uint256 currentBalance = calcPositionBalance(holder);
+        uint256 apr = _vaultService.calcBorrowRate_S1();
+
+        return (collateral, debt, currentBalance, apr);
     }
 
     function _closePosition(address holder, address liquidator) internal {
@@ -186,8 +224,6 @@ contract PoolService is Ownable {
                 liquidationPremium = amountToReturn;
             }
         }
-
-
 
         amountToReturn = amountToReturn.sub(liquidationPremium);
 
@@ -318,13 +354,11 @@ contract PoolService is Ownable {
         return address (_vaultService);
     }
 
-
     function getPositionDetails(address holder) external view returns (uint256, uint256) {
         (uint256 amount, uint256 leveragedAmount, ) =
         _PositionRepository.getPositionDetails(address(this), holder);
         return (amount, leveragedAmount);
     }
-
 
     function getPositionTokensCount(address trader) external view returns (uint256) {
         return  _PositionRepository.getTokenListCount(address(this), trader);
@@ -337,5 +371,4 @@ contract PoolService is Ownable {
     function getRiskLevel() external view returns (bool) {
         return _isHighRisk;
     }
-
 }

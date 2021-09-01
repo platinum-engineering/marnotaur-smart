@@ -56,11 +56,12 @@ def test_get_risk_level(contract_poolservice):
 def test_allow_token_for_trading(contract_vaultservice, contract_gtoken, contract_pricerepository, contract_poolservice):
     _prepare_allow_token_for_trading(contract_vaultservice, contract_pricerepository, contract_poolservice)
     _allow_token_for_trading(contract_gtoken, contract_poolservice)
-    find_token = False
+    _allow_token_for_trading(contract_gtoken, contract_poolservice)
+    count_token = 0
     for i in range(contract_poolservice.allowedTokenCount()):
         if contract_poolservice.allowedTokenById(i) == contract_gtoken:
-            find_token = True
-    assert find_token
+            count_token += 1
+    assert count_token == 1
 
 
 def test_disallow_token_for_trading(contract_vaultservice, contract_gtoken, contract_pricerepository, contract_poolservice):
@@ -68,6 +69,14 @@ def test_disallow_token_for_trading(contract_vaultservice, contract_gtoken, cont
     contract_poolservice.disallowTokenForTrading(contract_gtoken)
     with reverts("This token is not allowed"):
         contract_poolservice.swapTokensForExactTokens(0, 0, [contract_gtoken], 0)
+    count_token = 0
+    for i in range(contract_poolservice.allowedTokenCount()):
+        if contract_poolservice.allowedTokenById(i) == contract_gtoken:
+            count_token += 1
+    assert count_token == 0
+    prev_count = contract_poolservice.allowedTokenCount()
+    contract_poolservice.disallowTokenForTrading('0x0000000000000000000000000000000000000000')
+    assert contract_poolservice.allowedTokenCount() == prev_count
 
 
 def test_open_position(accounts, contract_gtoken, contract_underlyingtoken, contract_vaultservice, contract_positionrepository, contract_poolservice):
