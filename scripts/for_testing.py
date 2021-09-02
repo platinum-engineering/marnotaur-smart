@@ -38,7 +38,7 @@ def filling_gvp(account, vault_addr, pool_addr, token, tokens, amount):
 
 
 def main():
-    account = accounts.load('deployment_rinkeby_account')
+    account = accounts.load('deployment_account')
     amount = 1e17
     for item in SETS:
         filling_gvp(account, item['VAULT'], item['POOL'], item['TOKEN'], item['TOKENS'], amount)
