@@ -13,7 +13,9 @@ def main():
     )
 
     for i in range(poolRepository.getPoolsCount()):
-        poolRepository.setStatusPool(i, 2, {'from': account})
+        _, status = poolRepository.getPoolById(i)
+        if status == 0:
+            poolRepository.setStatusPool(i, 2, {'from': account})
 
     resume = f"""
     ********************************************************

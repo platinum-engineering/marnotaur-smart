@@ -37,10 +37,10 @@ def get_repository(account, uniswap_address="", internal=False):
         uniswapRouter = UniswapRouterMock.deploy({'from': account})
         uniswap_address = uniswapRouter.address
 
-    addressRepository.setPositionRepository(positionRepository)
-    addressRepository.setPoolRepository(poolRepository)
-    addressRepository.setPriceRepository(priceRepository)
-    addressRepository.setUniswapRouter(uniswap_address)
+    addressRepository.setPositionRepository(positionRepository, {'from': account})
+    addressRepository.setPoolRepository(poolRepository, {'from': account})
+    addressRepository.setPriceRepository(priceRepository, {'from': account})
+    addressRepository.setUniswapRouter(uniswap_address, {'from': account})
 
     return positionRepository, poolRepository, priceRepository, addressRepository
 

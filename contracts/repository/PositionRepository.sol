@@ -3,11 +3,8 @@
 pragma solidity ^0.6.0;
 
 import "OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/access/Ownable.sol";
-import "OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/token/ERC20/ERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/math/SafeMath.sol";
-import "../repository/AddressRepository.sol";
 import "../lib/PoolACL.sol";
-import "../lib/console.sol";
 
 /**
  * @title Leverage Repository
@@ -130,6 +127,7 @@ contract PositionRepository is Ownable, PoolACL {
         for (uint256 i = 0; i < getTokenListCount(pool, trader); i++) {
             (address token, ) = getTokenById(pool, trader, i);
             delete _positions[pool][trader].tokensListMap[token];
+            delete _positions[pool][trader].tokensBalances[token];
         }
         _positions[pool][trader].active = false;
     }
