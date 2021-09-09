@@ -6,7 +6,7 @@ from constants import TOKENS, UNISWAP_ROUTER
 
 
 def main():
-    account = accounts.load('deployment_rinkeby_account')
+    account = accounts.load('deployment_account')
 
     positionRepository, poolRepository, priceRepository, addressRepository = get_repository(
         account, UNISWAP_ROUTER
